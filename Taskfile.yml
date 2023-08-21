@@ -8,3 +8,10 @@ tasks:
   missed:
     cmds:
       - python3 -m http.server -d ./cover
+
+
+  lint:
+    cmds:
+      - isort ./src
+      - black ./src
+      - ruff ./src --fix

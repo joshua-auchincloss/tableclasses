@@ -13,7 +13,7 @@ from tableclasses.errs import ColumnError, DataError, RowError
 from tableclasses.pandas import tabled
 from tableclasses.pandas.tabled import DataFrame
 
-from .utils import get_data, get_row_dicts, not_caught
+from .utils import get_data, get_row_dicts, not_caught, rename_col_ord
 
 
 @tabled
@@ -46,6 +46,14 @@ class TestTableWrap:
 @tabled
 class TestIndexed:
     a: int = field("int32", index=True)
+    b: str = field("string")
+    c: float = field("float64")
+    d: datetime = field("datetime")
+    e: date = field("date")
+
+@tabled
+class TestAliased:
+    a: int = field("int32", aliases=["f","g"])
     b: str = field("string")
     c: float = field("float64")
     d: datetime = field("datetime")
@@ -203,6 +211,24 @@ def test_invalid_rows():
         except RowError:
             pass
 
+
+def test_aliased():
+    expect = get_expect()
+    data = get_data()
+
+    test = pd.DataFrame(data)
+    test.rename({"a": "f"}, axis=1, inplace=True)
+    t = TestAliased.from_existing(test)
+    deep_equals(expect, t)
+
+    test_dict = rename_col_ord(data, a="f")
+    t = TestAliased.from_columns(test_dict)
+    deep_equals(expect, t)
+
+
+    test_dict = rename_col_ord(data, a="g")
+    t = TestAliased.from_columns(test_dict)
+    deep_equals(expect, t)
 
 def test_invalid_cols():
     test = get_expect()

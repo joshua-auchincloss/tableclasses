@@ -1,7 +1,7 @@
 from collections.abc import Generator
-from typing import Callable, Dict, ParamSpec, TypeVar
+from typing import Callable, Dict, Generic, ParamSpec, Protocol, TypeVar
 
-T = ParamSpec("T")
+T = TypeVar("T")
 P = ParamSpec("P")
 Cls = TypeVar("Cls")
 Tabular = TypeVar("Tabular")
@@ -19,3 +19,8 @@ TypeDict = Dict[TypeKey, TableType]
 RowValidator = Callable[[any, int], None]
 CellValue = TypeVar("CellValue")
 CellValueGetter = Callable[[any, str, int], CellValue]
+
+
+class Indexable(Protocol, Generic[T]):
+    def __getitem__(self, key: int) -> T:  # pragma: no cov
+        ...

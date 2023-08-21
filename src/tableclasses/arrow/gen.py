@@ -2,8 +2,10 @@ from dataclasses import Field
 from typing import Optional
 
 from tableclasses.arrow.tabled import Table
-from tableclasses.dc import gen, types
+from tableclasses.dc import gen, map_types
 from tableclasses.types import Cls, P
+
+types = map_types(lambda arrow: arrow)
 
 
 def with_known(known: list[Field], orig: Cls) -> "Table[Cls]":

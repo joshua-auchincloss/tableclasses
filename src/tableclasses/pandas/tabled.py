@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Annotated, Callable, Generic, TypeVar
+from typing import Annotated, Generic, TypeVar
 
 from beartype import beartype
 from beartype.vale import Is
@@ -8,46 +8,12 @@ from pandas import Series as _Series
 
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Base
-from tableclasses.errs import ColumnError, RowError
-from tableclasses.types import CellValueGetter, Cls, RowsLike, RowValidator
+from tableclasses.base.utils import get_column, get_keyed, must_get_col, resolve_row_fs
+from tableclasses.types import Cls, RowsLike
 
 T = TypeVar("T")
 ColumnArgs = TypeVar("ColumnArgs", _Series, list, Generator)
-
-
-def resolve_rowfs(row: any, name: str, allow_positional: bool) -> tuple[CellValueGetter, RowValidator]:
-    if hasattr(row, "get") and callable(row.get):
-
-        def getter(row: dict, name: str, _: int):
-            return row.get(name)
-
-        def valid(row: dict, n_fields: int):
-            if not len(row.keys()) == n_fields:
-                raise RowError(row, f"{row.keys()}")
-
-    elif hasattr(row, name):
-
-        def getter(row: any, name: str, _: int):
-            return getattr(row, name)
-
-        def valid(_: any, __: int):
-            pass
-
-    elif isinstance(row, tuple) and allow_positional:
-
-        def getter(row: tuple, _: str, idx: int):
-            try:
-                return row[idx]
-            except IndexError as e:  # pragma: no cov
-                raise RowError(row, "(..., len == fields.length)") from e
-
-        def valid(row: tuple, n_fields: int):
-            if not len(row) == n_fields:
-                raise RowError(row, f"{row}")
-
-    else:
-        raise RowError(row, "(list, iterable, object)")
-    return getter, valid
+NamedColumns = dict[str, ColumnArgs]
 
 
 def allowed_repr(meta: FieldMeta):
@@ -55,7 +21,7 @@ def allowed_repr(meta: FieldMeta):
     return f"(pd.Series[{typ}] | list[{typ}] | Generator[{typ}])"
 
 
-def valid_cols(cols: dict[str, ColumnArgs]):
+def valid_cols(cols: NamedColumns):
     for col in cols.values():
         if not isinstance(col, (_Series, Generator, list)):
             return False
@@ -66,46 +32,17 @@ def valid_rows(rows: RowsLike):
     return isinstance(rows, (list, Generator, tuple))
 
 
-def get_column(named_cols: dict[str, ColumnArgs], name: str, meta: FieldMeta) -> ColumnArgs:
-    col = named_cols.get(name)
-    if col is None:
-        raise ColumnError(meta, allowed_repr, col)
-    return col
-
-
-def get_df(other: _DataFrame, name: str, meta: FieldMeta):
-    try:
-        return other[name]
-    except KeyError as e:
-        raise ColumnError(meta, allowed_repr, other.columns) from e
-
-
-def must_get_col(getter: Callable[[any, str, FieldMeta], ColumnArgs], source: any, meta: FieldMeta):
-    col = None
-    try:
-        col = getter(source, meta.col_name, meta)
-    except ColumnError as e:
-        for name in meta.aliases:
-            try:
-                col = get_df(source, name, meta)
-            except ColumnError:
-                pass
-        if col is None:
-            raise e
-    return col
-
-
 class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
     @beartype
     @classmethod
-    def from_columns(cls, named_cols: Annotated[dict[str, ColumnArgs], Is[valid_cols]]):
+    def from_columns(cls, columns: Annotated[NamedColumns, Is[valid_cols]]):
         self = cls.__new__(cls)
         cols = {}
         idx = []
-        cls.validate_allowed(named_cols.keys())
+        cls.validate_allowed(columns.keys())
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
-            col = must_get_col(get_column, named_cols, meta)
+            col = must_get_col(get_column, columns, meta, allowed_repr)
             cols[meta.col_name] = _Series(col).astype(meta.arrow)
             if meta.index:
                 idx.append(meta.col_name)
@@ -124,7 +61,7 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
             colname = meta.col_name
-            col = must_get_col(get_df, other, meta)
+            col = must_get_col(get_keyed, other, meta, allowed_repr)
             self[colname] = _Series(col).astype(meta.arrow)
             if meta.index:
                 idx.append(colname)
@@ -146,20 +83,19 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
             values = []
             for row in rows:
                 if getter is None or checker is None:
-                    (getter, checker) = resolve_rowfs(row=row, name=meta.col_name, allow_positional=allow_positional)
+                    (getter, checker) = resolve_row_fs(row=row, name=meta.col_name, allow_positional=allow_positional)
 
                 checker(row, num)
                 value = getter(row, meta.col_name, i)
 
                 values.append(value)
-            colname = meta.col_name
 
-            keyed[colname] = _Series(
+            keyed[meta.col_name] = _Series(
                 values,
                 dtype=meta.arrow,
             )
             if meta.index:
-                idx.append(colname)
+                idx.append(meta.col_name)
         _DataFrame.__init__(self, keyed)
         if len(idx) > 0:
             self = self.set_index(idx)
