@@ -1,0 +1,13 @@
+| Name                                    |   Stmts |   Miss |   Cover |
+| --------------------------------------- | ------: | -----: | ------: |
+| src/tableclasses/\_\_init\_\_.py        |       1 |      0 |    100% |
+| src/tableclasses/\_dc.py                |      39 |      1 |     97% |
+| src/tableclasses/api.py                 |      10 |      0 |    100% |
+| src/tableclasses/base/\_\_init\_\_.py   |       3 |      0 |    100% |
+| src/tableclasses/base/errs.py           |      20 |      3 |     85% |
+| src/tableclasses/base/field.py          |      17 |      0 |    100% |
+| src/tableclasses/base/tabled.py         |      24 |      8 |     67% |
+| src/tableclasses/pandas/\_\_init\_\_.py |       1 |      0 |    100% |
+| src/tableclasses/pandas/table.py        |      85 |      9 |     89% |
+| src/tableclasses/types.py               |       7 |      0 |    100% |
+| **TOTAL**                               | **207** | **21** | **90%** |
