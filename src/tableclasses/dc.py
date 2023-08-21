@@ -7,53 +7,52 @@ import pyarrow as pa
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Wrapped
 from tableclasses.errs import UnsupportedTypeError
-from tableclasses.types import TableType, TypeDict, TypeKey
+from tableclasses.types import ArrowType, Cls, TableType, TypeDict, TypeKey
 
 T = TypeVar("T")
 
 
-@dataclass
-class TypeMapping:
-    arrow: Callable[[], any]
-
-
-types: Dict[TypeKey, TypeMapping] = {
+types: Dict[TypeKey, Callable[[], ArrowType]] = {
     # strings
-    str: TypeMapping(pa.string),
-    "string": TypeMapping(pa.string),
-    "str": TypeMapping(pa.string),
+    str: pa.string,
+    "string": pa.string,
+    "str": pa.string,
     # booleans
-    bool: TypeMapping(pa.bool_),
-    "bool": TypeMapping(pa.bool_),
+    bool: pa.bool_,
+    "bool": pa.bool_,
     # binary
-    bytes: TypeMapping(pa.binary),
-    "bytes": TypeMapping(pa.binary),
-    "byte": TypeMapping(pa.uint8),
+    bytes: pa.binary,
+    "bytes": pa.binary,
+    "byte": pa.uint8,
     # uint
-    "uint": TypeMapping(pa.uint32),
-    "uint8": TypeMapping(pa.uint8),
-    "uint16": TypeMapping(pa.uint16),
-    "uint32": TypeMapping(pa.uint32),
-    "uint64": TypeMapping(pa.uint64),
+    "uint": pa.uint32,
+    "uint8": pa.uint8,
+    "uint16": pa.uint16,
+    "uint32": pa.uint32,
+    "uint64": pa.uint64,
     # int
-    int: TypeMapping(pa.int32),
-    "int": TypeMapping(pa.int32),
-    "int8": TypeMapping(pa.int8),
-    "int16": TypeMapping(pa.int16),
-    "int32": TypeMapping(pa.int32),
-    "int64": TypeMapping(pa.int64),
+    int: pa.int32,
+    "int": pa.int32,
+    "int8": pa.int8,
+    "int16": pa.int16,
+    "int32": pa.int32,
+    "int64": pa.int64,
     # float / double
-    float: TypeMapping(pa.float64),
-    "float": TypeMapping(pa.float64),
-    "float16": TypeMapping(pa.float16),
-    "float32": TypeMapping(pa.float32),
-    "float64": TypeMapping(pa.float64),
+    float: pa.float64,
+    "float": pa.float64,
+    "float16": pa.float16,
+    "float32": pa.float32,
+    "float64": pa.float64,
     # dates
-    date: TypeMapping(pa.date32),
-    "date": TypeMapping(pa.date32),
-    datetime: TypeMapping(pa.date64),
-    "datetime": TypeMapping(pa.date64),
+    date: pa.date32,
+    "date": pa.date32,
+    datetime: pa.date64,
+    "datetime": pa.date64,
 }
+
+
+def map_types(func: Callable[[ArrowType], TableType]) -> TypeDict:
+    return {kind: func(arrow_type()) for kind, arrow_type in types.items()}
 
 
 def resolve_type(types: TypeDict, native: type, alias: str) -> TableType:
@@ -71,7 +70,7 @@ def resolve_type(types: TypeDict, native: type, alias: str) -> TableType:
     return typ
 
 
-def gen(cls: T, with_known: Callable[[list[Field], T], Wrapped], type_mapping: TypeDict) -> Wrapped:
+def gen(cls: Cls, with_known: Callable[[list[Field], Cls], Wrapped], type_mapping: TypeDict) -> Wrapped:
     orig = cls
     if not is_dataclass(orig):
         cls = dataclass(orig)
@@ -82,9 +81,9 @@ def gen(cls: T, with_known: Callable[[list[Field], T], Wrapped], type_mapping: T
         if len(field.metadata) > 0:
             meta = FieldMeta(**field.metadata)
         else:
-            meta = FieldMeta("", col_name=field.name, index=False)
-        dtype = resolve_type(types=type_mapping, native=field.type, alias=meta.typ)
-        meta.arrow = dtype
+            meta = FieldMeta("", col_name=field.name, index=False, aliases=[])
+
+        meta.arrow = resolve_type(types=type_mapping, native=field.type, alias=meta.typ)
         if meta.col_name is None:
             meta.col_name = field.name
         field.metadata = asdict(meta)

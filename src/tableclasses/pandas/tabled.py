@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Annotated, Generic, TypeVar
+from typing import Annotated, Callable, Generic, TypeVar
 
 from beartype import beartype
 from beartype.vale import Is
@@ -8,8 +8,8 @@ from pandas import Series as _Series
 
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Base
-from tableclasses.errs import ColumnError, DataError, RowError
-from tableclasses.types import CellValueGetter, RowsLike, RowValidator
+from tableclasses.errs import ColumnError, RowError
+from tableclasses.types import CellValueGetter, Cls, RowsLike, RowValidator
 
 T = TypeVar("T")
 ColumnArgs = TypeVar("ColumnArgs", _Series, list, Generator)
@@ -66,27 +66,50 @@ def valid_rows(rows: RowsLike):
     return isinstance(rows, (list, Generator, tuple))
 
 
-class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
+def get_column(named_cols: dict[str, ColumnArgs], name: str, meta: FieldMeta) -> ColumnArgs:
+    col = named_cols.get(name)
+    if col is None:
+        raise ColumnError(meta, allowed_repr, col)
+    return col
+
+
+def get_df(other: _DataFrame, name: str, meta: FieldMeta):
+    try:
+        return other[name]
+    except KeyError as e:
+        raise ColumnError(meta, allowed_repr, other.columns) from e
+
+
+def must_get_col(getter: Callable[[any, str, FieldMeta], ColumnArgs], source: any, meta: FieldMeta):
+    col = None
+    try:
+        col = getter(source, meta.col_name, meta)
+    except ColumnError as e:
+        for name in meta.aliases:
+            try:
+                col = get_df(source, name, meta)
+            except ColumnError:
+                pass
+        if col is None:
+            raise e
+    return col
+
+
+class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
     @beartype
     @classmethod
     def from_columns(cls, named_cols: Annotated[dict[str, ColumnArgs], Is[valid_cols]]):
         self = cls.__new__(cls)
         cols = {}
-        allowed = cls.allowed()
         idx = []
-        disallowed = [field for field in named_cols.keys() if field not in allowed]
-        if len(disallowed) > 0:
-            err = "({:}, ...) is unknown to the model".format(",".join(disallowed))
-            raise DataError(err)
+        cls.validate_allowed(named_cols.keys())
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
-            colname = meta.col_name
-            col = named_cols.get(colname)
-            if col is None:
-                raise ColumnError(meta, allowed_repr, col)
-            cols[colname] = _Series(col).astype(meta.arrow)
+            col = must_get_col(get_column, named_cols, meta)
+            cols[meta.col_name] = _Series(col).astype(meta.arrow)
             if meta.index:
-                idx.append(colname)
+                idx.append(meta.col_name)
+
         _DataFrame.__init__(self, cols)
         if len(idx) > 0:
             self = self.set_index(idx)
@@ -97,13 +120,11 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
     def from_existing(cls, other: _DataFrame):
         self = other.copy(False)
         idx = []
+        cls.validate_allowed(other.columns)
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
             colname = meta.col_name
-            try:
-                col = other[colname]
-            except KeyError as e:
-                raise ColumnError(meta, allowed_repr, None) from e
+            col = must_get_col(get_df, other, meta)
             self[colname] = _Series(col).astype(meta.arrow)
             if meta.index:
                 idx.append(colname)

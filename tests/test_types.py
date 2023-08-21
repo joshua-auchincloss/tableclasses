@@ -6,8 +6,8 @@ import pyarrow as pa
 from pandas import ArrowDtype as dtype
 
 from tableclasses.dc import resolve_type
-from tableclasses.pandas.gen import types
 from tableclasses.errs import UnsupportedTypeError
+from tableclasses.pandas.gen import types
 
 from .utils import not_caught
 
@@ -68,7 +68,6 @@ def test_raises():
             raise e
         except UnsupportedTypeError:
             pass
-
 
     alias_tests = [
         "abcdef",

@@ -2,6 +2,7 @@ from dataclasses import Field
 from typing import Dict, Generic, List, Optional, TypeVar, overload
 
 from tableclasses.base.field import FieldMeta
+from tableclasses.errs import DataError
 from tableclasses.types import Cls, ColumnLike, RowsLike, Tabular
 
 
@@ -40,7 +41,16 @@ class Base(
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
             fields.append(meta.col_name)
+            fields += meta.aliases
         return fields
+
+    @classmethod
+    def validate_allowed(cls, given: list[str]):
+        allowed = cls.allowed()
+        disallowed = [field for field in given if field not in allowed]
+        if len(disallowed) > 0:
+            err = "({:}, ...) is unknown to the model".format(",".join(disallowed))
+            raise DataError(err)
 
 
 Wrapped = TypeVar("Wrapped", bound=Base)

@@ -9,30 +9,12 @@ from pandas import ArrowDtype as dtype
 
 from tableclasses.base.field import field
 from tableclasses.base.tabled import Base
-from tableclasses.errs import RowError, ColumnError, DataError
-from tableclasses.pandas.tabled import DataFrame
+from tableclasses.errs import ColumnError, DataError, RowError
 from tableclasses.pandas import tabled
+from tableclasses.pandas.tabled import DataFrame
 
-from .utils import not_caught
+from .utils import get_data, get_row_dicts, not_caught
 
-dates = [
-    "2023-08-01",
-    "2023-08-02",
-    "2023-08-03",
-]
-DATES = [datetime.fromisoformat(d) for d in dates]
-
-DATA = {
-    "a": [1, 2, 3],
-    "b": ["a", "b", "c"],
-    "c": [1.0, 2.0, 3.0],
-    "d": DATES,
-    "e": [d.date() for d in DATES],
-}
-
-
-def get_data():
-    return deepcopy(DATA)
 
 @tabled
 class TestUnfielded:
@@ -69,15 +51,6 @@ class TestIndexed:
     d: datetime = field("datetime")
     e: date = field("date")
 
-
-def get_row_dicts():
-    row_dicts = [{} for v in DATA.get("a")]
-    for key, val in DATA.items():
-        for i, v in enumerate(val):
-            if len(row_dicts) < (i - 1):
-                row_dicts.append({})
-            row_dicts[i][key] = v
-    return row_dicts
 
 def get_expect():
     data = get_data()
@@ -185,6 +158,7 @@ def test_column_errs():
         except (ColumnError, DataError):
             pass
 
+
 def test_indexed():
     data = get_data()
     expect = get_expect().set_index("a")
@@ -199,6 +173,7 @@ def test_indexed():
     t = TestIndexed.from_rows(row_dicts)
     deep_equals(expect, t)
 
+
 def test_invalid_rows():
     row_dicts = get_row_dicts()
     row_tup1 = []
@@ -209,7 +184,6 @@ def test_invalid_rows():
     for row in row_dicts:
         # extra value
         row_tup2.append((*row.values(), 2))
-
 
     row_dict = []
     for row in row_dicts:
@@ -238,10 +212,11 @@ def test_invalid_cols():
         not_caught()
     except RuntimeError as e:
         raise e
-    except ColumnError:
+    except DataError:
         pass
 
 
 def test_allowed():
-    assert TestFielded.allowed() == list(DATA.keys())
-    assert TestUnfielded.allowed() == list(DATA.keys())
+    data = get_data()
+    assert TestFielded.allowed() == list(data.keys())
+    assert TestUnfielded.allowed() == list(data.keys())
