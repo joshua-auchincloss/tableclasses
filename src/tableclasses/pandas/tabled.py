@@ -6,9 +6,9 @@ from beartype.vale import Is
 from pandas import DataFrame as _DataFrame
 from pandas import Series as _Series
 
-from tableclasses.errs import ColumnError, DataError, RowError
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Base
+from tableclasses.errs import ColumnError, DataError, RowError
 from tableclasses.types import CellValueGetter, RowsLike, RowValidator
 
 T = TypeVar("T")

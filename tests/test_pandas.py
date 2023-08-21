@@ -16,9 +16,9 @@ from tableclasses.pandas import tabled
 from .utils import not_caught
 
 dates = [
-    "2023-08-01T01:14:04Z",
-    "2023-08-02T01:14:04Z",
-    "2023-08-03T01:14:04Z",
+    "2023-08-01",
+    "2023-08-02",
+    "2023-08-03",
 ]
 DATES = [datetime.fromisoformat(d) for d in dates]
 

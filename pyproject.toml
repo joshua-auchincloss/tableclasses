@@ -5,9 +5,9 @@ build-backend = "hatchling.build"
 [project]
 name = "tableclasses"
 dynamic = ["version"]
-description = ''
+description = 'Dataclasses for tabular data'
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
 authors = [
@@ -32,14 +32,15 @@ pandas = [
 ]
 
 test = [
-  "coverage[toml]>=6.5",
+  "coverage[toml]",
   "pytest",
+  "pytest-cov"
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/tableclasses#readme"
-Issues = "https://github.com/unknown/tableclasses/issues"
-Source = "https://github.com/unknown/tableclasses"
+Documentation = "https://github.com/joshua-auchincloss/tableclasses#readme"
+Issues = "https://github.com/joshua-auchincloss/tableclasses/issues"
+Source = "https://github.com/joshua-auchincloss/tableclasses"
 
 [tool.hatch.version]
 path = "src/tableclasses/__about__.py"
@@ -66,7 +67,7 @@ cov = [
 ]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python = ["3.10", "3.11"]
 
 [tool.hatch.envs.lint]
 detached = true

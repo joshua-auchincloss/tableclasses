@@ -30,8 +30,8 @@ class Base(
     @overload
     @classmethod
     def from_rows(
-        cls, rows: RowsLike, allow_positional: Optional[bool] = False
-    ) -> Tabular:  # pragma: no cover # noqa: FBT002
+        cls, rows: RowsLike, allow_positional: Optional[bool] = False  # noqa: FBT002
+    ) -> Tabular:  # pragma: no cover
         ...
 
     @classmethod

@@ -1,13 +1,13 @@
 from dataclasses import Field, asdict, dataclass, fields, is_dataclass
 from datetime import date, datetime
-from typing import Callable, Dict, Optional, TypeVar
+from typing import Callable, Dict, TypeVar
 
 import pyarrow as pa
 
-from tableclasses.errs import UnsupportedTypeError
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Wrapped
-from tableclasses.types import P, TableType, TypeDict, TypeKey
+from tableclasses.errs import UnsupportedTypeError
+from tableclasses.types import TableType, TypeDict, TypeKey
 
 T = TypeVar("T")
 
