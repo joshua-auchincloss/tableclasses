@@ -2,12 +2,12 @@
 | --------------------------------------- | ------: | ----: | ------: |
 | src/tableclasses/\_\_init\_\_.py        |       0 |     0 |    100% |
 | src/tableclasses/base/\_\_init\_\_.py   |       3 |     0 |    100% |
-| src/tableclasses/base/field.py          |      17 |     0 |    100% |
+| src/tableclasses/base/field.py          |      18 |     0 |    100% |
 | src/tableclasses/base/tabled.py         |      21 |     0 |    100% |
 | src/tableclasses/dc.py                  |      39 |     0 |    100% |
 | src/tableclasses/errs.py                |      24 |     0 |    100% |
 | src/tableclasses/pandas/\_\_init\_\_.py |       2 |     0 |    100% |
 | src/tableclasses/pandas/gen.py          |      15 |     0 |    100% |
-| src/tableclasses/pandas/tabled.py       |      96 |     1 |     99% |
+| src/tableclasses/pandas/tabled.py       |     112 |     1 |     99% |
 | src/tableclasses/types.py               |      14 |     0 |    100% |
-| **TOTAL**                               | **231** | **1** | **99%** |
+| **TOTAL**                               | **248** | **1** | **99%** |

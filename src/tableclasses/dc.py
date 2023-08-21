@@ -82,7 +82,7 @@ def gen(cls: T, with_known: Callable[[list[Field], T], Wrapped], type_mapping: T
         if len(field.metadata) > 0:
             meta = FieldMeta(**field.metadata)
         else:
-            meta = FieldMeta("", col_name=field.name)
+            meta = FieldMeta("", col_name=field.name, index=False)
         dtype = resolve_type(types=type_mapping, native=field.type, alias=meta.typ)
         meta.arrow = dtype
         if meta.col_name is None:

@@ -73,6 +73,7 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
         self = cls.__new__(cls)
         cols = {}
         allowed = cls.allowed()
+        idx = []
         disallowed = [field for field in named_cols.keys() if field not in allowed]
         if len(disallowed) > 0:
             err = "({:}, ...) is unknown to the model".format(",".join(disallowed))
@@ -84,13 +85,18 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
             if col is None:
                 raise ColumnError(meta, allowed_repr, col)
             cols[colname] = _Series(col).astype(meta.arrow)
+            if meta.index:
+                idx.append(colname)
         _DataFrame.__init__(self, cols)
+        if len(idx) > 0:
+            self = self.set_index(idx)
         return self
 
     @beartype
     @classmethod
     def from_existing(cls, other: _DataFrame):
         self = other.copy(False)
+        idx = []
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
             colname = meta.col_name
@@ -99,6 +105,10 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
             except KeyError as e:
                 raise ColumnError(meta, allowed_repr, None) from e
             self[colname] = _Series(col).astype(meta.arrow)
+            if meta.index:
+                idx.append(colname)
+        if len(idx) > 0:
+            self = self.set_index(idx)
         return self
 
     @beartype
@@ -109,6 +119,7 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
         getter = None
         checker = None
         num = len(cls.__known__)
+        idx = []
         for i, known in enumerate(cls.__known__):
             meta = FieldMeta(**known.metadata)
             values = []
@@ -120,9 +131,15 @@ class DataFrame(Generic[T], Base[T, _DataFrame], _DataFrame):
                 value = getter(row, meta.col_name, i)
 
                 values.append(value)
-            keyed[meta.col_name] = _Series(
+            colname = meta.col_name
+
+            keyed[colname] = _Series(
                 values,
                 dtype=meta.arrow,
             )
+            if meta.index:
+                idx.append(colname)
         _DataFrame.__init__(self, keyed)
+        if len(idx) > 0:
+            self = self.set_index(idx)
         return self

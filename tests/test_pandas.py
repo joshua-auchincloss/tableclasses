@@ -34,7 +34,6 @@ DATA = {
 def get_data():
     return deepcopy(DATA)
 
-
 @tabled
 class TestUnfielded:
     a: int
@@ -60,6 +59,16 @@ class TestTableWrap:
     c: float = field("float64")
     d: datetime = field("datetime")
     e: date = field("date")
+
+
+@tabled
+class TestIndexed:
+    a: int = field("int32", index=True)
+    b: str = field("string")
+    c: float = field("float64")
+    d: datetime = field("datetime")
+    e: date = field("date")
+
 
 def get_row_dicts():
     row_dicts = [{} for v in DATA.get("a")]
@@ -176,7 +185,19 @@ def test_column_errs():
         except (ColumnError, DataError):
             pass
 
+def test_indexed():
+    data = get_data()
+    expect = get_expect().set_index("a")
 
+    t = TestIndexed.from_columns(data)
+    deep_equals(expect, t)
+
+    t = TestIndexed.from_existing(pd.DataFrame(data))
+    deep_equals(expect, t)
+
+    row_dicts = get_row_dicts()
+    t = TestIndexed.from_rows(row_dicts)
+    deep_equals(expect, t)
 
 def test_invalid_rows():
     row_dicts = get_row_dicts()
