@@ -1,5 +1,6 @@
 # tableclasses
 
+[![Code Coverage](https://img.shields.io/codecov/c/github/joshua-auchincloss/spic?style=flat-square)](https://app.codecov.io/github/joshua-auchincloss/tableclasses)
 [![PyPI - Version](https://img.shields.io/pypi/v/tableclasses.svg)](https://pypi.org/project/tableclasses)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tableclasses.svg)](https://pypi.org/project/tableclasses)
 
