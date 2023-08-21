@@ -5,6 +5,12 @@ from tableclasses.base.field import FieldMeta
 GetRepr = Callable[[FieldMeta], str]
 
 
+class DataError(Exception):
+    def __init__(self, cause: str):
+        msg = f"The provided data is invalid: {cause}"
+        super().__init__(self, msg)
+
+
 class ColumnError(Exception):
     def __init__(
         self,

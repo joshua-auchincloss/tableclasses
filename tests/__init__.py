@@ -1,7 +1,11 @@
-from os import getcwd
-from pathlib import PosixPath
-from sys import path
+from os import getcwd, name
+from sys import path, platform
 
-p = PosixPath(getcwd()) / "src"
+if name == "nt":
+    from pathlib import WindowsPath
+    p = WindowsPath(getcwd()) / "src"
+else:
+    from pathlib import PosixPath
+    p = PosixPath(getcwd()) / "src"
 
 path.append(str(p))

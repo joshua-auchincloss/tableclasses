@@ -7,12 +7,11 @@ import pyarrow as pa
 from beartype.roar import BeartypeCallHintParamViolation
 from pandas import ArrowDtype as dtype
 
-from tableclasses import tabled
-from tableclasses._dc import gen
 from tableclasses.base.field import field
 from tableclasses.base.tabled import Base
-from tableclasses.base.errs import RowError
-from tableclasses.pandas.table import DataFrame
+from tableclasses.errs import RowError, ColumnError, DataError
+from tableclasses.pandas.tabled import DataFrame
+from tableclasses.pandas import tabled
 
 from .utils import not_caught
 
@@ -36,7 +35,7 @@ def get_data():
     return deepcopy(DATA)
 
 
-@gen
+@tabled
 class TestUnfielded:
     a: int
     b: str
@@ -45,7 +44,7 @@ class TestUnfielded:
     e: date
 
 
-@gen
+@tabled
 class TestFielded:
     a: int = field("int32")
     b: str = field("string")
@@ -146,16 +145,82 @@ def test_raises_invalid_type():
         except BeartypeCallHintParamViolation:
             pass
 
+    tests = [
+        None,
+        "A",
+    ]
+    for test in tests:
+        try:
+            TestUnfielded.from_rows(test)
+            not_caught()
+        except RuntimeError as e:
+            raise e
+        except BeartypeCallHintParamViolation:
+            pass
+
+
+def test_column_errs():
+    b1 = get_data()
+    b1.pop("e")
+    muts = [
+        b1,
+        {**get_data(), "extra": [1]},
+    ]
+
+    for mut in muts:
+        try:
+            TestFielded.from_columns(mut)
+            not_caught()
+        except RuntimeError as e:
+            raise e
+        except (ColumnError, DataError):
+            pass
+
+
 
 def test_invalid_rows():
     row_dicts = get_row_dicts()
-    row_tup = []
+    row_tup1 = []
     for row in row_dicts:
-        row_tup.append(tuple(row.values()))
+        row_tup1.append(tuple(row.values()))
+
+    row_tup2 = []
+    for row in row_dicts:
+        # extra value
+        row_tup2.append((*row.values(), 2))
+
+
+    row_dict = []
+    for row in row_dicts:
+        row_dict.append({**row, "extra": 1})
+
+    tests = [
+        (row_tup1, False),
+        (row_tup2, True),
+        (row_dict, True),
+    ]
+    for rows, allow in tests:
+        try:
+            TestFielded.from_rows(rows, allow_positional=allow)
+            not_caught()
+        except RuntimeError as e:
+            raise e
+        except RowError:
+            pass
+
+
+def test_invalid_cols():
+    test = get_expect()
+    test.rename({"a": "f"}, axis=1, inplace=True)
     try:
-        TestFielded.from_rows(row_tup, allow_positional=False)
+        TestFielded.from_existing(test)
         not_caught()
     except RuntimeError as e:
         raise e
-    except RowError:
+    except ColumnError:
         pass
+
+
+def test_allowed():
+    assert TestFielded.allowed() == list(DATA.keys())
+    assert TestUnfielded.allowed() == list(DATA.keys())

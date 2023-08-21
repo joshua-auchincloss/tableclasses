@@ -1,8 +1,8 @@
 from dataclasses import Field
-from typing import Dict, Generic, List, overload
+from typing import Dict, Generic, List, Optional, TypeVar, overload
 
 from tableclasses.base.field import FieldMeta
-from tableclasses.types import Cls, ColumnLike, RowLike, Tabular
+from tableclasses.types import Cls, ColumnLike, RowsLike, Tabular
 
 
 class Base(
@@ -14,7 +14,7 @@ class Base(
     __known__ = List[Field]
 
     @overload
-    def __init__(self, **named_cols: Dict[str, ColumnLike]):
+    def __init__(self):  # pragma: no cover
         ...
 
     @overload
@@ -29,16 +29,18 @@ class Base(
 
     @overload
     @classmethod
-    def from_rows(cls, rows: RowLike) -> Tabular:  # pragma: no cover
+    def from_rows(
+        cls, rows: RowsLike, allow_positional: Optional[bool] = False
+    ) -> Tabular:  # pragma: no cover # noqa: FBT002
         ...
 
     @classmethod
     def allowed(cls) -> List[str]:
         fields = []
         for field in cls.__known__:
-            if len(field.metadata) > 0:
-                meta = FieldMeta(**field.metadata)
-                fields.append(meta.col_name)
-            else:
-                fields.append(field.name)
+            meta = FieldMeta(**field.metadata)
+            fields.append(meta.col_name)
         return fields
+
+
+Wrapped = TypeVar("Wrapped", bound=Base)

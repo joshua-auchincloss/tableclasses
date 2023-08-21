@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  cov:
+    cmds:
+      - scripts/cov.sh
+    
+  missed:
+    cmds:
+      - python3 -m http.server -d ./cover

@@ -5,8 +5,9 @@ import pandas as pd
 import pyarrow as pa
 from pandas import ArrowDtype as dtype
 
-from tableclasses._dc import resolve_type
-from tableclasses.base.errs import UnsupportedTypeError
+from tableclasses.dc import resolve_type
+from tableclasses.pandas.gen import types
+from tableclasses.errs import UnsupportedTypeError
 
 from .utils import not_caught
 
@@ -43,11 +44,11 @@ TESTS = [
 
 def test_resolve_dtype():
     for test in TESTS:
-        dt = resolve_type(test.typ, test.alias)
+        dt = resolve_type(types, test.typ, test.alias)
         assert dt == test.expected
 
         if test.autoresolves:
-            dt = resolve_type(test.typ, "")
+            dt = resolve_type(types, test.typ, "")
             assert dt == test.expected
 
 
@@ -55,10 +56,29 @@ def test_raises():
     class Custom:
         pass
 
-    try:
-        resolve_type(Custom, "")
-        not_caught()
-    except RuntimeError as e:
-        raise e
-    except UnsupportedTypeError:
-        pass
+    type_tests = [
+        Custom,
+    ]
+
+    for test in type_tests:
+        try:
+            resolve_type(types, test, "")
+            not_caught()
+        except RuntimeError as e:
+            raise e
+        except UnsupportedTypeError:
+            pass
+
+
+    alias_tests = [
+        "abcdef",
+    ]
+
+    for test in alias_tests:
+        try:
+            resolve_type(types, test, test)
+            not_caught()
+        except RuntimeError as e:
+            raise e
+        except UnsupportedTypeError:
+            pass
