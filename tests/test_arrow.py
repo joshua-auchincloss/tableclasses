@@ -5,7 +5,7 @@ import pyarrow as pa
 from tableclasses.arrow import tabled
 from tableclasses.base.field import field
 
-from .utils import get_data, get_row_dicts, not_caught, rename_col_ord
+from .utils import get_data, rename_col_ord
 
 
 @tabled
@@ -28,11 +28,12 @@ class TestFielded:
 
 @tabled
 class TestAliased:
-    a: int = field("int32", aliases=["f","g"])
+    a: int = field("int32", aliases=["f", "g"])
     b: str = field("string")
     c: float = field("float64")
     d: datetime = field("datetime")
     e: date = field("date")
+
 
 @tabled()
 class TestTableWrap:
@@ -81,7 +82,6 @@ def test_base():
     deep_equals(expect, t)
 
 
-
 def test_aliased():
     expect = get_expect()
     data = get_data()
@@ -94,7 +94,6 @@ def test_aliased():
     test_dict = rename_col_ord(data, a="f")
     t = TestAliased.from_columns(test_dict)
     deep_equals(expect, t)
-
 
     test_dict = rename_col_ord(data, a="g")
     t = TestAliased.from_columns(test_dict)

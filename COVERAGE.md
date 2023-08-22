@@ -6,12 +6,12 @@
 | src/tableclasses/arrow/tabled.py        |      52 |     2 |     96% |
 | src/tableclasses/base/\_\_init\_\_.py   |       3 |     0 |    100% |
 | src/tableclasses/base/field.py          |      20 |     0 |    100% |
-| src/tableclasses/base/tabled.py         |      30 |     0 |    100% |
+| src/tableclasses/base/tabled.py         |      29 |     0 |    100% |
 | src/tableclasses/base/utils.py          |      48 |     0 |    100% |
 | src/tableclasses/dc.py                  |      37 |     0 |    100% |
 | src/tableclasses/errs.py                |      24 |     0 |    100% |
 | src/tableclasses/pandas/\_\_init\_\_.py |       2 |     0 |    100% |
-| src/tableclasses/pandas/gen.py          |      15 |     0 |    100% |
-| src/tableclasses/pandas/tabled.py       |      82 |     1 |     99% |
+| src/tableclasses/pandas/gen.py          |      23 |     0 |    100% |
+| src/tableclasses/pandas/tabled.py       |      88 |     1 |     99% |
 | src/tableclasses/types.py               |      16 |     0 |    100% |
-| **TOTAL**                               | **345** | **3** | **99%** |
+| **TOTAL**                               | **358** | **3** | **99%** |

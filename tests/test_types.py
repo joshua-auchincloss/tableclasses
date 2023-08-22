@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 
-import pandas as pd
 import pyarrow as pa
-from pandas import ArrowDtype as dtype
+from pandas import ArrowDtype as Dtype
 
 from tableclasses.dc import resolve_type
 from tableclasses.errs import UnsupportedTypeError
@@ -17,28 +16,28 @@ class Test:
     alias: str
     typ: type
     autoresolves: bool
-    expected: dtype
+    expected: Dtype
 
 
 TESTS = [
-    Test("bool", bool, True, dtype(pa.bool_())),
-    Test("bytes", bytes, True, dtype(pa.binary())),
-    Test("byte", bytes, False, dtype(pa.uint8())),
-    Test("uint", int, False, dtype(pa.uint32())),
-    Test("uint8", int, False, dtype(pa.uint8())),
-    Test("uint16", int, False, dtype(pa.uint16())),
-    Test("uint32", int, False, dtype(pa.uint32())),
-    Test("uint64", int, False, dtype(pa.uint64())),
-    Test("int", int, True, dtype(pa.int32())),
-    Test("int16", int, False, dtype(pa.int16())),
-    Test("int32", int, True, dtype(pa.int32())),
-    Test("int64", int, False, dtype(pa.int64())),
-    Test("float", float, False, dtype(pa.float64())),
-    Test("float16", float, False, dtype(pa.float16())),
-    Test("float32", float, False, dtype(pa.float32())),
-    Test("float64", float, False, dtype(pa.float64())),
-    Test("datetime", datetime, True, dtype(pa.date64())),
-    Test("date", date, True, dtype(pa.date32())),
+    Test("bool", bool, True, Dtype(pa.bool_())),
+    Test("bytes", bytes, True, Dtype(pa.binary())),
+    Test("byte", bytes, False, Dtype(pa.uint8())),
+    Test("uint", int, False, Dtype(pa.uint32())),
+    Test("uint8", int, False, Dtype(pa.uint8())),
+    Test("uint16", int, False, Dtype(pa.uint16())),
+    Test("uint32", int, False, Dtype(pa.uint32())),
+    Test("uint64", int, False, Dtype(pa.uint64())),
+    Test("int", int, True, Dtype(pa.int32())),
+    Test("int16", int, False, Dtype(pa.int16())),
+    Test("int32", int, True, Dtype(pa.int32())),
+    Test("int64", int, False, Dtype(pa.int64())),
+    Test("float", float, False, Dtype(pa.float64())),
+    Test("float16", float, False, Dtype(pa.float16())),
+    Test("float32", float, False, Dtype(pa.float32())),
+    Test("float64", float, False, Dtype(pa.float64())),
+    Test("datetime", datetime, True, Dtype(pa.date64())),
+    Test("date", date, True, Dtype(pa.date32())),
 ]
 
 

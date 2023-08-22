@@ -9,7 +9,7 @@ from pandas import Series as _Series
 from tableclasses.base.field import FieldMeta
 from tableclasses.base.tabled import Base
 from tableclasses.base.utils import get_column, get_keyed, must_get_col, resolve_row_fs
-from tableclasses.types import Cls, RowsLike
+from tableclasses.types import Cls, P, RowsLike
 
 T = TypeVar("T")
 ColumnArgs = TypeVar("ColumnArgs", _Series, list, Generator)
@@ -32,11 +32,22 @@ def valid_rows(rows: RowsLike):
     return isinstance(rows, (list, Generator, tuple))
 
 
-class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
+class DataFrame(
+    Generic[Cls],
+    _DataFrame,
+    Base[Cls, _DataFrame],
+):
+    def set_index(self, *args: P.args, **kwargs: P.kwargs):
+        try:
+            kwargs.pop("inplace")
+        except KeyError:
+            pass
+        super().set_index(*args, **kwargs, inplace=True)
+        return self
+
     @beartype
     @classmethod
     def from_columns(cls, columns: Annotated[NamedColumns, Is[valid_cols]]):
-        self = cls.__new__(cls)
         cols = {}
         idx = []
         cls.validate_allowed(columns.keys())
@@ -46,8 +57,7 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
             cols[meta.col_name] = _Series(col).astype(meta.arrow)
             if meta.index:
                 idx.append(meta.col_name)
-
-        _DataFrame.__init__(self, cols)
+        self = cls(cols)
         if len(idx) > 0:
             self = self.set_index(idx)
         return self
@@ -55,16 +65,17 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
     @beartype
     @classmethod
     def from_existing(cls, other: _DataFrame):
-        self = other.copy(False)
+        data = {}
         idx = []
         cls.validate_allowed(other.columns)
         for field in cls.__known__:
             meta = FieldMeta(**field.metadata)
             colname = meta.col_name
             col = must_get_col(get_keyed, other, meta, allowed_repr)
-            self[colname] = _Series(col).astype(meta.arrow)
+            data[colname] = _Series(col).astype(meta.arrow)
             if meta.index:
                 idx.append(colname)
+        self = cls(data)
         if len(idx) > 0:
             self = self.set_index(idx)
         return self
@@ -72,7 +83,6 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
     @beartype
     @classmethod
     def from_rows(cls, rows: RowsLike, allow_positional: bool = False):  # noqa: FBT002
-        self = cls.__new__(cls)
         keyed = {}
         getter = None
         checker = None
@@ -96,7 +106,7 @@ class DataFrame(Generic[Cls], Base[Cls, _DataFrame], _DataFrame):
             )
             if meta.index:
                 idx.append(meta.col_name)
-        _DataFrame.__init__(self, keyed)
+        self = cls(keyed)
         if len(idx) > 0:
             self = self.set_index(idx)
         return self

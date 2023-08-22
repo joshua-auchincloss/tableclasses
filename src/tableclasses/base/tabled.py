@@ -1,5 +1,5 @@
 from dataclasses import Field
-from typing import Dict, Generic, List, Optional, TypeVar, overload
+from typing import Dict, Generic, List, Optional, Protocol, TypeVar, overload
 
 from tableclasses.base.field import FieldMeta
 from tableclasses.errs import DataError
@@ -7,32 +7,29 @@ from tableclasses.types import Cls, ColumnLike, RowsLike, Tabular
 
 
 class Base(
+    Protocol,
     Generic[
         Cls,
         Tabular,
-    ]
+    ],
 ):
-    __known__ = List[Field]
+    __known__: List[Field]
 
     @overload
-    def __init__(self):  # pragma: no cover
+    @classmethod
+    def from_existing(cls, other: Tabular) -> "Base[Cls, Tabular]":  # pragma: no cover
         ...
 
     @overload
     @classmethod
-    def from_existing(cls, other: Tabular) -> Tabular:  # pragma: no cover
-        ...
-
-    @overload
-    @classmethod
-    def from_columns(cls, **named_cols: Dict[str, ColumnLike]) -> Tabular:  # pragma: no cover
+    def from_columns(cls, **named_cols: Dict[str, ColumnLike]) -> "Base[Cls, Tabular]":  # pragma: no cover
         ...
 
     @overload
     @classmethod
     def from_rows(
         cls, rows: RowsLike, allow_positional: Optional[bool] = False  # noqa: FBT002
-    ) -> Tabular:  # pragma: no cover
+    ) -> "Base[Cls, Tabular]":  # pragma: no cover
         ...
 
     @classmethod

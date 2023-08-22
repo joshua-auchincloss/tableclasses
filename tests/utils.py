@@ -37,8 +37,5 @@ def get_row_dicts():
     return row_dicts
 
 
-
 def rename_col_ord(dl: dict, **keys):
-    return {
-        keys.get(k, k):v for k,v in dl.items()
-    }
+    return {keys.get(k, k): v for k, v in dl.items()}
